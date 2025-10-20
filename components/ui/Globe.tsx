@@ -115,37 +115,55 @@ export function Globe({ globeConfig, data }: WorldProps) {
 
   const _buildData = () => {
     const arcs = data;
-    let points = [];
-    for (let i = 0; i < arcs.length; i++) {
-      const arc = arcs[i];
-      const rgb = hexToRgb(arc.color) as { r: number; g: number; b: number };
-      points.push({
-        size: defaultProps.pointSize,
-        order: arc.order,
-        color: (t: number) => `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${1 - t})`,
-        lat: arc.startLat,
-        lng: arc.startLng,
-      });
-      points.push({
-        size: defaultProps.pointSize,
-        order: arc.order,
-        color: (t: number) => `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${1 - t})`,
-        lat: arc.endLat,
-        lng: arc.endLng,
-      });
+  let points: any[] = [];
+  for (let i = 0; i < arcs.length; i++) {
+    const arc = arcs[i];
+    // Validate numeric coordinates
+    const startLat = Number(arc.startLat);
+    const startLng = Number(arc.startLng);
+    const endLat = Number(arc.endLat);
+    const endLng = Number(arc.endLng);
+
+    if (
+      !isFinite(startLat) ||
+      !isFinite(startLng) ||
+      !isFinite(endLat) ||
+      !isFinite(endLng)
+    ) {
+      // skip invalid arc
+      continue;
     }
 
-    // remove duplicates for same lat and lng
-    const filteredPoints = points.filter(
-      (v, i, a) =>
-        a.findIndex((v2) =>
-          ["lat", "lng"].every(
-            (k) => v2[k as "lat" | "lng"] === v[k as "lat" | "lng"]
-          )
-        ) === i
-    );
+    const rgb = hexToRgb(arc.color) as { r: number; g: number; b: number };
+    if (!rgb) continue;
 
-    setGlobeData(filteredPoints);
+    points.push({
+      size: defaultProps.pointSize,
+      order: arc.order,
+      color: (t: number) => `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${1 - t})`,
+      lat: startLat,
+      lng: startLng,
+    });
+    points.push({
+      size: defaultProps.pointSize,
+      order: arc.order,
+      color: (t: number) => `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${1 - t})`,
+      lat: endLat,
+      lng: endLng,
+    });
+  }
+
+  // remove duplicates for same lat and lng
+  const filteredPoints = points.filter(
+    (v, i, a) =>
+      a.findIndex((v2) =>
+        ["lat", "lng"].every(
+          (k) => v2[k as "lat" | "lng"] === v[k as "lat" | "lng"]
+        )
+      ) === i
+  );
+
+  setGlobeData(filteredPoints);
   };
 
   useEffect(() => {
