@@ -374,7 +374,7 @@ const solutions: Solution[] = [
     tech: ["PWA", "Service Workers", "React Native", "Firebase"],
   },
   {
-    icon: "🎪",
+    icon: "��",
     title: "No Social Media Integration",
     problem:
       "Website and social media are siloed; can't leverage social proof or sharing.",
@@ -532,7 +532,7 @@ const Solutions = () => {
 
       // default direction and speed
       containerRef.current.style.setProperty("--animation-direction", "forwards");
-      containerRef.current.style.setProperty("--animation-duration", "40s");
+      containerRef.current.style.setProperty("--animation-duration", "80s");
 
       setStart(true);
     }
