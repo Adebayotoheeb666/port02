@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 type Solution = {
@@ -516,12 +516,52 @@ const Card = ({ s }: { s: Solution }) => (
 );
 
 const Solutions = () => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const scrollerRef = useRef<HTMLUListElement | null>(null);
+  const [start, setStart] = useState(false);
+
+  useEffect(() => {
+    if (containerRef.current && scrollerRef.current) {
+      const children = Array.from(scrollerRef.current.children);
+      children.forEach((child) => {
+        const clone = child.cloneNode(true);
+        scrollerRef.current?.appendChild(clone);
+      });
+
+      // default direction and speed
+      containerRef.current.style.setProperty("--animation-direction", "forwards");
+      containerRef.current.style.setProperty("--animation-duration", "40s");
+
+      setStart(true);
+    }
+  }, []);
+
   return (
     <section id="solutions" className="w-full py-20">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8">
-        {solutions.map((s, idx) => (
-          <Card key={idx} s={s} />
-        ))}
+      <div
+        ref={containerRef}
+        className={cn(
+          "scroller relative z-20 w-screen overflow-hidden [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]"
+        )}
+      >
+        <ul
+          ref={scrollerRef}
+          className={cn(
+            "flex min-w-full shrink-0 gap-6 py-4 w-max flex-nowrap",
+            start && "animate-scroll",
+            "hover:[animation-play-state:paused]"
+          )}
+        >
+          {solutions.map((s, idx) => (
+            <li
+              key={idx}
+              className="w-[90vw] max-w-[420px] flex-shrink-0"
+              style={{ padding: "0 12px" }}
+            >
+              <Card s={s} />
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );
