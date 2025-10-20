@@ -23,6 +23,7 @@ const Home = () => {
         <Clients />
         <Experience />
         <Approach />
+        <Solutions />
         <Footer />
       </div>
     </main>
