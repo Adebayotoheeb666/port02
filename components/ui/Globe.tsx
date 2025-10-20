@@ -115,37 +115,55 @@ export function Globe({ globeConfig, data }: WorldProps) {
 
   const _buildData = () => {
     const arcs = data;
-    let points = [];
-    for (let i = 0; i < arcs.length; i++) {
-      const arc = arcs[i];
-      const rgb = hexToRgb(arc.color) as { r: number; g: number; b: number };
-      points.push({
-        size: defaultProps.pointSize,
-        order: arc.order,
-        color: (t: number) => `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${1 - t})`,
-        lat: arc.startLat,
-        lng: arc.startLng,
-      });
-      points.push({
-        size: defaultProps.pointSize,
-        order: arc.order,
-        color: (t: number) => `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${1 - t})`,
-        lat: arc.endLat,
-        lng: arc.endLng,
-      });
+  let points: any[] = [];
+  for (let i = 0; i < arcs.length; i++) {
+    const arc = arcs[i];
+    // Validate numeric coordinates
+    const startLat = Number(arc.startLat);
+    const startLng = Number(arc.startLng);
+    const endLat = Number(arc.endLat);
+    const endLng = Number(arc.endLng);
+
+    if (
+      !isFinite(startLat) ||
+      !isFinite(startLng) ||
+      !isFinite(endLat) ||
+      !isFinite(endLng)
+    ) {
+      // skip invalid arc
+      continue;
     }
 
-    // remove duplicates for same lat and lng
-    const filteredPoints = points.filter(
-      (v, i, a) =>
-        a.findIndex((v2) =>
-          ["lat", "lng"].every(
-            (k) => v2[k as "lat" | "lng"] === v[k as "lat" | "lng"]
-          )
-        ) === i
-    );
+    const rgb = hexToRgb(arc.color) as { r: number; g: number; b: number };
+    if (!rgb) continue;
 
-    setGlobeData(filteredPoints);
+    points.push({
+      size: defaultProps.pointSize,
+      order: arc.order,
+      color: (t: number) => `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${1 - t})`,
+      lat: startLat,
+      lng: startLng,
+    });
+    points.push({
+      size: defaultProps.pointSize,
+      order: arc.order,
+      color: (t: number) => `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${1 - t})`,
+      lat: endLat,
+      lng: endLng,
+    });
+  }
+
+  // remove duplicates for same lat and lng
+  const filteredPoints = points.filter(
+    (v, i, a) =>
+      a.findIndex((v2) =>
+        ["lat", "lng"].every(
+          (k) => v2[k as "lat" | "lng"] === v[k as "lat" | "lng"]
+        )
+      ) === i
+  );
+
+  setGlobeData(filteredPoints);
   };
 
   useEffect(() => {
@@ -167,21 +185,37 @@ export function Globe({ globeConfig, data }: WorldProps) {
   const startAnimation = () => {
     if (!globeRef.current || !globeData) return;
 
+    // filter out any invalid arcs just in case
+    const validArcs = data.filter((arc) => {
+      const sLat = Number((arc as any).startLat);
+      const sLng = Number((arc as any).startLng);
+      const eLat = Number((arc as any).endLat);
+      const eLng = Number((arc as any).endLng);
+      return (
+        isFinite(sLat) &&
+        isFinite(sLng) &&
+        isFinite(eLat) &&
+        isFinite(eLng)
+      );
+    });
+
     globeRef.current
-      .arcsData(data)
-      .arcStartLat((d) => (d as { startLat: number }).startLat * 1)
-      .arcStartLng((d) => (d as { startLng: number }).startLng * 1)
-      .arcEndLat((d) => (d as { endLat: number }).endLat * 1)
-      .arcEndLng((d) => (d as { endLng: number }).endLng * 1)
+      .arcsData(validArcs)
+      .arcStartLat((d) => Number((d as any).startLat))
+      .arcStartLng((d) => Number((d as any).startLng))
+      .arcEndLat((d) => Number((d as any).endLat))
+      .arcEndLng((d) => Number((d as any).endLng))
       .arcColor((e: any) => (e as { color: string }).color)
       .arcAltitude((e) => {
-        return (e as { arcAlt: number }).arcAlt * 1;
+        return Number((e as { arcAlt: number }).arcAlt) || 0.1;
       })
-      .arcStroke((e) => {
-        return [0.32, 0.28, 0.3][Math.round(Math.random() * 2)];
+      .arcStroke((e, i) => {
+        // use deterministic stroke value based on index to avoid random differences
+        const strokes = [0.32, 0.28, 0.3];
+        return strokes[i % strokes.length];
       })
       .arcDashLength(defaultProps.arcLength)
-      .arcDashInitialGap((e) => (e as { order: number }).order * 1)
+      .arcDashInitialGap((e) => Number((e as { order: number }).order) || 0)
       .arcDashGap(15)
       .arcDashAnimateTime((e) => defaultProps.arcTime);
 

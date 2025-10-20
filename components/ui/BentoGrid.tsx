@@ -1,8 +1,10 @@
-import { useState } from "react";
+"use client";
+
+import { useState, useEffect } from "react";
 import { IoCopyOutline } from "react-icons/io5";
 
-// Also install this npm i --save-dev @types/react-lottie
-import Lottie from "react-lottie";
+// Note: react-lottie (and its dependency lottie-web) runs only in the browser.
+// We dynamically import it inside useEffect so the server never tries to load it.
 
 import { cn } from "@/lib/utils";
 
@@ -57,6 +59,24 @@ export const BentoGridItem = ({
 
   const [copied, setCopied] = useState(false);
 
+  // Lottie component is dynamically imported on the client only
+  const [LottieComponent, setLottieComponent] = useState<any>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const mod = await import("react-lottie");
+        if (mounted) setLottieComponent(() => mod.default || mod);
+      } catch (e) {
+        // ignore - lottie isn't critical
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const defaultOptions = {
     loop: copied,
     autoplay: copied,
@@ -66,9 +86,15 @@ export const BentoGridItem = ({
     },
   };
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     const text = "hsu@jsmastery.pro";
-    navigator.clipboard.writeText(text);
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      }
+    } catch (e) {
+      // ignore clipboard failures
+    }
     setCopied(true);
   };
 
@@ -180,7 +206,9 @@ export const BentoGridItem = ({
                   }`}
               >
                 {/* <img src="/confetti.gif" alt="confetti" /> */}
-                <Lottie options={defaultOptions} height={200} width={400} />
+                {LottieComponent ? (
+                  <LottieComponent options={defaultOptions} height={200} width={400} />
+                ) : null}
               </div>
 
               <MagicButton
