@@ -9,11 +9,24 @@ export default function ContactPage() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const subject = encodeURIComponent(`Message from ${name}`);
-    const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\n${message}`);
-    window.location.href = `mailto:contact@jsmastery.pro?subject=${subject}&body=${body}`;
+    try {
+      const res = await fetch('/api/contacts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, message }),
+      });
+      if (!res.ok) throw new Error('Failed to submit');
+      // reset
+      setName('');
+      setEmail('');
+      setMessage('');
+      alert('Message submitted — thank you!');
+    } catch (err) {
+      console.error(err);
+      alert('Submission failed');
+    }
   };
 
   return (
