@@ -15,9 +15,25 @@ export default function FileUpload({ onUpload }: { onUpload: (path: string) => v
       const { error: uploadError } = await supabase.storage.from('uploads').upload(filePath, file, { cacheControl: '3600', upsert: false });
       if (uploadError) throw uploadError;
 
-      // Optionally create metadata row in uploaded_files
+      // Create metadata server-side to avoid RLS issues
       const user = (await supabase.auth.getUser()).data.user;
-      await supabase.from('uploaded_files').insert([{ user_id: user?.id, bucket: 'uploads', path: filePath, filename: file.name, mime_type: file.type, size: file.size, public: false }]);
+      try {
+        await fetch('/api/uploads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: user?.id,
+            bucket: 'uploads',
+            path: filePath,
+            filename: file.name,
+            mime_type: file.type,
+            size: file.size,
+            public: false,
+          }),
+        });
+      } catch (metaErr) {
+        console.error('Failed to save upload metadata', metaErr);
+      }
 
       onUpload(filePath);
     } catch (err) {
