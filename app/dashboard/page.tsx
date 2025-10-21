@@ -122,35 +122,74 @@ export default function DashboardPage() {
 
       <section className="grid grid-cols-3 gap-6">
         <div className="col-span-1 border p-4">
-          <h2 className="font-semibold mb-3">Projects</h2>
-          <ul>
-            {projects.map((p) => (
-              <li key={p.id} className="flex justify-between items-center py-2">
-                <span>{p.title}</span>
-                <button className="text-sm text-red-500" onClick={() => deleteProject(p.id)}>Delete</button>
-              </li>
-            ))}
-          </ul>
+          <div className="flex justify-between items-center">
+            <h2 className="font-semibold mb-3">Projects</h2>
+            <div>
+              <button className="px-2 py-1 border mr-2" onClick={() => setEditingProject({ title: '', des: '', img: '', link: '', iconlists: [] })}>New</button>
+            </div>
+          </div>
+
+          {editingProject ? (
+            <ProjectForm
+              project={editingProject}
+              onSaved={() => { setEditingProject(null); fetchAll(); }}
+              onCancel={() => setEditingProject(null)}
+            />
+          ) : (
+            <ul>
+              {projects.map((p) => (
+                <li key={p.id} className="flex justify-between items-center py-2">
+                  <div>
+                    <div className="font-medium">{p.title}</div>
+                    {p.img && <div className="text-sm text-neutral-400">{p.img}</div>}
+                  </div>
+                  <div className="flex gap-2">
+                    <button className="px-2 py-1 border" onClick={() => setEditingProject(p as any)}>Edit</button>
+                    <button className="px-2 py-1 border text-red-500" onClick={() => deleteProject(p.id)}>Delete</button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         <div className="col-span-1 border p-4">
-          <h2 className="font-semibold mb-3">Posts</h2>
-          <ul>
-            {posts.map((p) => (
-              <li key={p.id} className="flex justify-between items-center py-2">
-                <span>{p.title}</span>
-                <button className="text-sm text-red-500" onClick={async () => {
-                  if (!confirm('Delete post?')) return;
-                  const res = await fetch(`/api/posts?id=${p.id}`, { method: 'DELETE' });
-                  if (res.ok) fetchAll();
-                }}>Delete</button>
-              </li>
-            ))}
-          </ul>
+          <div className="flex justify-between items-center">
+            <h2 className="font-semibold mb-3">Posts</h2>
+            <div>
+              <button className="px-2 py-1 border mr-2" onClick={() => setEditingPost({ title: '', excerpt: '', content: '', url: '' })}>New</button>
+            </div>
+          </div>
+
+          {editingPost ? (
+            <PostForm
+              post={editingPost}
+              onSaved={() => { setEditingPost(null); fetchAll(); }}
+              onCancel={() => setEditingPost(null)}
+            />
+          ) : (
+            <ul>
+              {posts.map((p) => (
+                <li key={p.id} className="flex justify-between items-center py-2">
+                  <span>{p.title}</span>
+                  <div className="flex gap-2">
+                    <button className="px-2 py-1 border" onClick={() => setEditingPost(p as any)}>Edit</button>
+                    <button className="text-sm text-red-500" onClick={async () => {
+                      if (!confirm('Delete post?')) return;
+                      const res = await fetch(`/api/posts?id=${p.id}`, { method: 'DELETE' });
+                      if (res.ok) fetchAll();
+                    }}>Delete</button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         <div className="col-span-1 border p-4">
-          <h2 className="font-semibold mb-3">Contacts</h2>
+          <div className="flex justify-between items-center">
+            <h2 className="font-semibold mb-3">Contacts</h2>
+          </div>
           <ul>
             {contacts.map((c) => (
               <li key={c.id} className="py-2 border-b">
@@ -166,6 +205,11 @@ export default function DashboardPage() {
               </li>
             ))}
           </ul>
+
+          <div className="mt-4">
+            <h3 className="font-medium mb-2">Upload a file</h3>
+            <FileUpload onUpload={(path) => alert('Uploaded: ' + path)} />
+          </div>
         </div>
       </section>
     </main>
