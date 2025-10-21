@@ -25,10 +25,18 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, data) => setSession(data.session));
+    // initialize session safely
+    supabase.auth.getSession().then(({ data }) => setSession(data?.session ?? null)).catch(() => setSession(null));
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, data) => {
+      setSession(data?.session ?? null);
+    });
+    const subscription = authListener?.subscription;
     return () => {
-      listener.subscription.unsubscribe();
+      try {
+        subscription?.unsubscribe();
+      } catch (e) {
+        // ignore
+      }
     };
   }, []);
 
