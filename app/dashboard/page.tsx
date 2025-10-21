@@ -133,7 +133,11 @@ export default function DashboardPage() {
             {posts.map((p) => (
               <li key={p.id} className="flex justify-between items-center py-2">
                 <span>{p.title}</span>
-                {/* edit/delete could be added */}
+                <button className="text-sm text-red-500" onClick={async () => {
+                  if (!confirm('Delete post?')) return;
+                  const res = await fetch(`/api/posts?id=${p.id}`, { method: 'DELETE' });
+                  if (res.ok) fetchAll();
+                }}>Delete</button>
               </li>
             ))}
           </ul>
