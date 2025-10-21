@@ -16,6 +16,9 @@ export default function DashboardPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
 
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
+
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
