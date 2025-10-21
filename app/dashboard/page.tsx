@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import ProjectForm from '@/components/dashboard/ProjectForm';
+import PostForm from '@/components/dashboard/PostForm';
+import FileUpload from '@/components/dashboard/FileUpload';
 
 type Project = { id: number; title: string; des?: string; img?: string; link?: string };
 type Post = { id: number; title: string; excerpt?: string; date?: string; url?: string };
